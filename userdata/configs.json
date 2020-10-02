@@ -1,0 +1,15 @@
+{
+  "credentials": {
+    "_comment": "CLIENT_ID, CLIENT_SECRET required for OAuth's initial handshake. Maybe other stuff later",
+    "CLIENT_ID": 47498,
+    "CLIENT_SECRET": "082737c890f03f2547f847b7635dcc4527a52d2a",
+    "ACCESS_TOKEN": {
+      "_comment": "basically strava gives you, with the initial handshake, a 6hrs access token (expires_in, expires_at). it also gives you a refresh token, which you can use to get a new short-lived access token",
+      "token_type": "Bearer",
+      "expires_at": 0,
+      "expires_in": 0,
+      "refresh_token": "",
+      "access_token": ""
+                    }
+                  }
+}
