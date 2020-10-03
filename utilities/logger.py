@@ -2,6 +2,8 @@ import os
 import logging
 from utils import LOG_DIR
 
+DEFAULT_FORMATTER = logging.Formatter('%(asctime)s - %(name)s:%(levelname)s - %(message)s')
+
 def get_root_logger(loggername, filename=None):
     """
     :param loggername: obv.
@@ -31,17 +33,22 @@ def get_root_logger(loggername, filename=None):
     else:
         logger.setLevel(logging.DEBUG if debug else logging.INFO)
 
-    formatter = logging.Formatter('%(asctime)s - %(name)s:%(levelname)s - %(message)s')
-
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
-
-    if filename:
-        file_handler = logging.FileHandler(os.path.join(LOG_DIR, filename))
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-
+    if len(logger.handlers)==0:
+        logger.addHandler(get_stream_handler())
+    if filename and len(logger.handlers)<2:
+        logger.addHandler(get_file_handler(filename))
     return logger
 
+# those are usefule so we can easily build handlers from naywhere if needed (testing logs etc)
 
+def get_stream_handler(formatter=DEFAULT_FORMATTER):
+    """ builds & returns a stream handler"""
+    sh = logging.StreamHandler()
+    sh.setFormatter(formatter)
+    return sh
+
+def get_file_handler(filename="logs.log", formatter=DEFAULT_FORMATTER):
+    """ builds & return a file handler based on parameters """
+    fh = logging.FileHandler(os.path.join(LOG_DIR, filename))
+    fh.setFormatter(formatter)
+    return fh

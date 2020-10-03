@@ -1,0 +1,12 @@
+{
+  "_comment": "describes the endpoints used by strava ",
+  "ROOT_URL" : "https://www.strava.com/",
+  "ACTIVITIES": "activities/",
+  "ATHLETES": "athletes/",
+  "ROUTES": "routes/",
+  "OAUTH_CODE": "oauth/",
+  "AUTHORIZE": "authorize/",
+  "TOKEN": "token"
+
+
+}
