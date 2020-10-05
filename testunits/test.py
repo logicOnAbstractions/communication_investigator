@@ -9,6 +9,16 @@ import os
 from utilities.logger import *
 from utilities.dao import *
 
+os.environ["ENV"] = "development"
+os.environ["LOG_LEVEL"] = "INFO"
+LOG = get_root_logger("mylogger", filename=f'log.log')
+LOG.debug(f'logger debug level msg ')
+LOG.info(f'logger info level msg ')
+LOG.warning(f'logger warn level msg ')
+LOG.error(f'logger error level msg ')
+LOG.critical(f'logger critical level msg ')
+
+
 class SomeTests(unittest.TestCase):     # on doit hériter de TestCase
 
     def __init__(self, *args, **kwargs):
@@ -50,22 +60,24 @@ class SomeTests(unittest.TestCase):     # on doit hériter de TestCase
         LOG.info("Ping strava test successfull.")
 
     def test_get_auth_code(self):
-        """ test that we receive 200 OK if initiate the auth from strava"""
-        # code = self.mainprog_volatile.launch_oauth_protocol()
-        # self.assertTrue(len(code)==40)          # code is 40 alphanums chars
+        """ test that we receive a code that's 40 alphanum chars"""
+        code = self.mainprog_volatile.launch_oauth_protocol()
+        self.assertTrue(len(code)==40)          # code is 40 alphanums chars
 
     def test_get_tokens(self):
-        """ tests that we can get a access, refresh token using the procedure    """
+        """ tests that we can get a access, refresh token using the procedure & that the response looks like what we expect    """
         code = self.mainprog_volatile.launch_oauth_protocol()
-        tokens = self.mainprog_volatile.get_tokens_from_code(code)
-        print(tokens)
+        tokens = self.mainprog_volatile.get_tokens_reponse_from_code(code)
+        self.assertTrue(tokens["token_type"]=="Bearer")
+        self.assertTrue(tokens["expires_in"]>=3600)
+        self.assertTrue(len(tokens["refresh_token"])==40)
+        self.assertTrue(len(tokens["access_token"])==40)
 
     def test_mp_configs(self):
         """ checks configs are loaded properly as expected """
         loaded_configs = self.mainprog_volatile.configs
         self.assertEqual(loaded_configs, DiskDao().get_configs())
         LOG.info(f"Main program configs loaded as expected")
-
 
     def test_logger(self):
         """ a few things we test regarding handlers in logger, making sure we don't double-register handlers (and thus double the msgs) """

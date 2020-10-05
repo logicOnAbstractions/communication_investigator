@@ -62,7 +62,7 @@ class MainProgram:
         self.LOG.info(f"MainProgram.run()... ")
         self.ping_strava()
         code = self.launch_oauth_protocol()
-        tokens = self.get_tokens_from_code(code)
+        tokens = self.get_tokens_reponse_from_code(code)
         print(tokens)
 
     def launch_oauth(self):
@@ -116,7 +116,7 @@ class MainProgram:
 
         return code
 
-    def get_tokens_from_code(self, code):
+    def get_tokens_reponse_from_code(self, code):
         """ gets you the acess/refresh tokens from strava """
         # now we need to do a POST with the above code in params in order to receive our tokens
         token_params = {"client_id": 47498, "client_secret": self.client_secret, "code": code,
@@ -125,7 +125,9 @@ class MainProgram:
         self.LOG.info(f"Url for token request from code: {token_url}, code:{code}")
         reponse = requests.post(token_url, params=token_params)
         self.LOG.info(f"TOKEN: {reponse}")
-        return reponse
+        resp_dict = json.loads(reponse.content)
+
+        return resp_dict
 
     def get_activity_by_id(self, activity_id):
         """ assuming valid access/refresh token are set for this user in configs.json (or db or whereever),
