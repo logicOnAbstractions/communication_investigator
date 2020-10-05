@@ -3,6 +3,8 @@ import logging
 from utils import LOG_DIR
 
 DEFAULT_FORMATTER = logging.Formatter('%(asctime)s - %(name)s:%(levelname)s - %(message)s')
+os.environ["ENV"] = "development"
+os.environ["LOG_LEVEL"] = "DEBUG"
 
 def get_root_logger(loggername, filename=None):
     """

@@ -25,13 +25,17 @@ import os
 import json
 from utilities.logger import get_root_logger
 from utilities.dao import *
+from program.validation import TokenManager
 
 
 class MainProgram:
     """ the high level manager of the program """
     def __init__(self, logger=None):
+        # instantiate some objcs
         self.ddao = DiskDao()
         self.sdao = StravaDao()
+        self.tok_man = TokenManager(self.ddao)
+
         self.configs = self.ddao.get_configs()
         self.LOG = logger if logger else self.get_logger()
 
@@ -50,7 +54,7 @@ class MainProgram:
     @staticmethod
     def get_logger():
         """ inits the logs. should only be if for whatever reason no logger has been defined """
-        logger = get_root_logger("mylogger", filename=f'log.log')
+        logger = get_root_logger(BASE_LOGGER_NAME, filename=f'log.log')
         logger.debug(f'logger debug level msg ')
         logger.info(f'logger info level msg ')
         logger.warning(f'logger warn level msg ')
@@ -65,16 +69,6 @@ class MainProgram:
         tokens = self.get_tokens_reponse_from_code(code)
         print(tokens)
 
-    def launch_oauth(self):
-
-        ID = 3427572515  # this the real id of casual saturday night marathon
-        ACCESS_TOKEN = "a06efe7ae0235b961f1d5d5af6a5ed6202106302"  # from /settings/api un "My API application" once logged in valid a few days
-        request_url = f'https://www.strava.com/api/v3/activities/{ID}?include_all_efforts=" "Authorization: Bearer {ACCESS_TOKEN}'
-        response = requests.get(request_url)
-        self.LOG.info(f"status for get activity by id: {response.status_code}")
-        self.LOG.info("trying just the ping the api ")
-        response_2 = requests.get('https://www.strava.com/')
-        self.LOG.info(response_2.status_code)
 
     def ping_strava(self):
         """ pings stravaé. Returns the who object from requests.get() """
@@ -85,21 +79,12 @@ class MainProgram:
         self.LOG.debug(f"full response: {r.text}")
         return r
 
-    def launch_oauth_protocol(self, code_params={}):
+    def launch_oauth_protocol(self):
         """ makes an authorisation request to strava. format of the rqst:
-            client_id: '47498'
-            redirect_uri: 'localhost'
-            response_type: 'code'
-            approval_prompt: 'auto'
-            scope: activity: 'read_all,profile:read_all'
-            state: [optional - will be forwarded to the redirect URI, so useful if we need to pick on something at that point after auth
-
-            those are all "in query" - which I guess means they should be encoded as url params
+            :return: a code (which can be used in a 2nd step to get the access/refresh tokens
         """
 
-        if code_params.keys():
-            self.LOG.info("params keys are present in theory")
-        else:
+        if self.tok_man.validate_credentials():
             self.LOG.info(f"using params set in {CONFIGS_FILE} to perform oauth... ")
             code_params = {"client_id": self.client_id, "redirect_uri": 'http://127.0.0.1', "response_type": "code",
                            "approval_prompt": "auto", "scope": "activity:read_all,profile:read_all",
@@ -113,26 +98,37 @@ class MainProgram:
             self.LOG.info(f"http:/(....)&code=b9d4b3bcd690fa1d3dfb81e4e40024363745caf7&scope(....)")
             # self.LOG.info(f"the code entered was {code}. Validating with strava... ")
             code = input("Please enter the alphanumeric code, excluding the termination symbol '&' at the end:")
-
-        return code
+            return code
+        else:                   # TODO: implt. relevent actions if we fail to launc the oauth
+            return False
 
     def get_tokens_reponse_from_code(self, code):
-        """ gets you the acess/refresh tokens from strava """
+        """ gets you the acess/refresh tokens from strava. returns the dictionnary that contains the strava response (expiration, tokens, etc.) """
         # now we need to do a POST with the above code in params in order to receive our tokens
-        token_params = {"client_id": 47498, "client_secret": self.client_secret, "code": code,
-                        "grant_type": "authorization_code"}
-        token_url = self.sdao.oauth_token_url
-        self.LOG.info(f"Url for token request from code: {token_url}, code:{code}")
-        reponse = requests.post(token_url, params=token_params)
-        self.LOG.info(f"TOKEN: {reponse}")
-        resp_dict = json.loads(reponse.content)
 
-        return resp_dict
+        if self.tok_man.validate_credentials():
+            token_params = {"client_id": 47498, "client_secret": self.client_secret, "code": code,
+                            "grant_type": "authorization_code"}
+            token_url = self.sdao.oauth_token_url
+            self.LOG.info(f"Url for token request from code: {token_url}, code:{code}")
+            reponse = requests.post(token_url, params=token_params)
+            self.LOG.info(f"TOKEN: {reponse}")
+            resp_dict = json.loads(reponse.content)
+            return resp_dict
+        else:
+            return False
+
+
 
     def get_activity_by_id(self, activity_id):
         """ assuming valid access/refresh token are set for this user in configs.json (or db or whereever),
             then fetches that activity id for that user if it exists
         """
+
+        if self.tok_man.validate_credentials():
+            pass
+        else:
+            return False
 
     @property
     def client_id(self):

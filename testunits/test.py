@@ -3,15 +3,15 @@
 import unittest                         # our test lib
 import numpy as np                      # if we want to test numpy arrays
 from main import MainProgram
-import requests
-from utils import *
-import os
+import json
 from utilities.logger import *
 from utilities.dao import *
+from utils import *
+import os
 
 os.environ["ENV"] = "development"
 os.environ["LOG_LEVEL"] = "INFO"
-LOG = get_root_logger("mylogger", filename=f'log.log')
+LOG = get_root_logger(BASE_LOGGER_NAME, filename=f'log.log')
 LOG.debug(f'logger debug level msg ')
 LOG.info(f'logger info level msg ')
 LOG.warning(f'logger warn level msg ')
@@ -33,6 +33,7 @@ class SomeTests(unittest.TestCase):     # on doit hériter de TestCase
         """
 
         cls.mainprog_permanent = MainProgram(logger=LOG)            # e.g. instantiated once at beginning of test and potentially used by many successive tests
+        cls.dao                 = DiskDao()
 
     @classmethod
     def tearDownClass(cls):
@@ -68,6 +69,7 @@ class SomeTests(unittest.TestCase):     # on doit hériter de TestCase
         """ tests that we can get a access, refresh token using the procedure & that the response looks like what we expect    """
         code = self.mainprog_volatile.launch_oauth_protocol()
         tokens = self.mainprog_volatile.get_tokens_reponse_from_code(code)
+        LOG.info(f"Test: tokens ares: {tokens}")
         self.assertTrue(tokens["token_type"]=="Bearer")
         self.assertTrue(tokens["expires_in"]>=3600)
         self.assertTrue(len(tokens["refresh_token"])==40)
@@ -76,7 +78,7 @@ class SomeTests(unittest.TestCase):     # on doit hériter de TestCase
     def test_mp_configs(self):
         """ checks configs are loaded properly as expected """
         loaded_configs = self.mainprog_volatile.configs
-        self.assertEqual(loaded_configs, DiskDao().get_configs())
+        self.assertEqual(loaded_configs, self.dao.get_configs())
         LOG.info(f"Main program configs loaded as expected")
 
     def test_logger(self):
@@ -85,6 +87,25 @@ class SomeTests(unittest.TestCase):     # on doit hériter de TestCase
         test_logger = get_root_logger("test_logger", filename=f"testlogs.log")
         test_logger.info(f"test_logger handlers: {test_logger.handlers} ")
 
+    def test_update_token(self):
+        """ tests that we update the token in userdata /configs properly """
+
+        # load the dummy token
+        with open(os.path.join(TEST_DIR,DUMMY_TOKEN), 'r') as f:
+            dum_tok = json.load(f)
+
+        # keep the old user token in memory so we can switch them back after the test
+        old_configs = self.dao.get_configs()
+
+        # tell the DAO to replace whatever is in the user configs with this dum_tok
+        self.dao.update_access_token(dum_tok)
+
+        # assert we've updated - asking for the configs & getting its token value should be equal to dummy's values
+        updated_configs = self.dao.get_configs()
+        self.assertEqual(updated_configs["credentials"]["token"], dum_tok)
+
+        # now replace the old configs so auth still works after test
+        self.dao.update_access_token(old_configs["credentials"]["token"])
 
 
 if __name__ == '__main__':
