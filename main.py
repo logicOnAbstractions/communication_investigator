@@ -26,7 +26,9 @@ import json
 from utilities.logger import get_root_logger
 from utilities.dao import *
 from program.validation import TokenManager
+from flask import Flask
 
+app         = Flask(__name__)
 
 class MainProgram:
     """ the high level manager of the program """
@@ -66,7 +68,7 @@ class MainProgram:
         self.LOG.info(f"MainProgram.run()... ")
         self.ping_strava()
         code = self.launch_oauth_protocol()
-        tokens = self.get_tokens_reponse_from_code(code)
+        tokens = self.get_tokens_response_from_code(code)
         print(tokens)
 
 
@@ -102,23 +104,21 @@ class MainProgram:
         else:                   # TODO: implt. relevent actions if we fail to launc the oauth
             return False
 
-    def get_tokens_reponse_from_code(self, code):
+    def get_tokens_response_from_code(self, code):
         """ gets you the acess/refresh tokens from strava. returns the dictionnary that contains the strava response (expiration, tokens, etc.) """
         # now we need to do a POST with the above code in params in order to receive our tokens
 
         if self.tok_man.validate_credentials():
             token_params = {"client_id": 47498, "client_secret": self.client_secret, "code": code,
-                            "grant_type": "authorization_code"}
-            token_url = self.sdao.oauth_token_url
+                            "grant_type": "refresh_token"}
+            token_url = self.sdao.refresh_token_url
             self.LOG.info(f"Url for token request from code: {token_url}, code:{code}")
-            reponse = requests.post(token_url, params=token_params)
-            self.LOG.info(f"TOKEN: {reponse}")
-            resp_dict = json.loads(reponse.content)
+            response = requests.post(token_url, params=token_params)
+            self.LOG.info(f"TOKEN: {response}")
+            resp_dict = json.loads(response.content)
             return resp_dict
         else:
             return False
-
-
 
     def get_activity_by_id(self, activity_id):
         """ assuming valid access/refresh token are set for this user in configs.json (or db or whereever),
@@ -126,7 +126,17 @@ class MainProgram:
         """
 
         if self.tok_man.validate_credentials():
-            pass
+            # activity_params = {"client_id": 47498, "client_secret": self.client_secret, "refresh_token": self.refresh_token,
+            #                 "grant_type": "authorization_code"}
+            authorized_headers = {"Authorization": f" Bearer {self.access_token}"}
+            # authorized_headers = {}
+            getactivity_url = urljoin(self.sdao.get_activity_url, str(activity_id))
+            self.LOG.info(f"Url for token request from url: {getactivity_url}, with headers {authorized_headers}")
+            # response = requests.get(getactivity_url, headers=authorized_headers)
+            response = requests.get(getactivity_url)
+            print(response.content)
+            # print(json.loads(response.content))
+
         else:
             return False
 
@@ -138,11 +148,13 @@ class MainProgram:
         return self.configs["credentials"]["CLIENT_SECRET"]
     @property
     def access_token(self):
-        return self.configs["credentials"]["ACCESS_TOKEN"]["access_token"]
+        return self.configs["credentials"]["token"]["access_token"]
     @property
     def refresh_token(self):
-        return self.configs["credentials"]["ACCESS_TOKEN"]["refresh_token"]
-
+        return self.configs["credentials"]["token"]["refresh_token"]
+    @property
+    def activity_params(self):
+        return
 
 
 

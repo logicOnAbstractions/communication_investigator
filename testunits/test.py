@@ -23,7 +23,7 @@ class SomeTests(unittest.TestCase):     # on doit hériter de TestCase
 
     def __init__(self, *args, **kwargs):
         super(SomeTests, self).__init__(*args, **kwargs)
-        self.mainprog_volatile = None
+        self.mainprog_volatile = MainProgram(logger=LOG)
 
     @classmethod
     def setUpClass(cls):
@@ -68,7 +68,7 @@ class SomeTests(unittest.TestCase):     # on doit hériter de TestCase
     def test_get_tokens(self):
         """ tests that we can get a access, refresh token using the procedure & that the response looks like what we expect    """
         code = self.mainprog_volatile.launch_oauth_protocol()
-        tokens = self.mainprog_volatile.get_tokens_reponse_from_code(code)
+        tokens = self.mainprog_volatile.get_tokens_response_from_code(code)
         LOG.info(f"Test: tokens ares: {tokens}")
         self.assertTrue(tokens["token_type"]=="Bearer")
         self.assertTrue(tokens["expires_in"]>=3600)
@@ -106,6 +106,12 @@ class SomeTests(unittest.TestCase):     # on doit hériter de TestCase
 
         # now replace the old configs so auth still works after test
         self.dao.update_access_token(old_configs["credentials"]["token"])
+
+    def test_get_activity_by_id(self):
+        """ gets an activity by ID. needs to use the auth/token management to it implicitely tests that as well.
+        we still keep a separate tests for those as well though"""
+        self.mainprog_volatile.get_activity_by_id(3427572515)
+
 
 
 if __name__ == '__main__':
