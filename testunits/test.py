@@ -110,9 +110,11 @@ class SomeTests(unittest.TestCase):     # on doit hériter de TestCase
     def test_get_activity_by_id(self):
         """ gets an activity by ID. needs to use the auth/token management to it implicitely tests that as well.
         we still keep a separate tests for those as well though"""
-        self.mainprog_volatile.get_activity_by_id(3427572515)
+        # self.mainprog_volatile.get_activity_by_id("3427572515")
+        self.mainprog_volatile.get_activity_by_id("3427572515")
 
-
+    def test_get_athlete_data(self):
+        self.mainprog_volatile.get_athlete_info()
 
 if __name__ == '__main__':
 

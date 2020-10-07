@@ -5,6 +5,8 @@ import requests
 import json
 from utilities.logger import *
 from utils import *
+from program.decorators import api_calls_wrapper
+
 
 class TokenManager:
     """ keeps a reference to the token when the program is up & running. is in charge of checking for expiraiton etc...
@@ -26,7 +28,7 @@ class TokenManager:
         else:
             return True
 
-    # TODO: decorator err mngmt
+    @api_calls_wrapper
     def refresh_access_token(self):
         """
         updates the access token in the user configs

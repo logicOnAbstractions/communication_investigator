@@ -1,8 +1,9 @@
 {
   "_comment": "describes the endpoints used by strava ",
   "ROOT_URL" : "https://www.strava.com/",
+  "ROOT_API_URL" : "https://www.strava.com/api/v3/",
   "ACTIVITIES": "activities/",
-  "ATHLETES": "athletes/",
+  "ATHLETES": "athlete/",
   "ROUTES": "routes/",
   "OAUTH_CODE": "oauth/",
   "AUTHORIZE": "authorize/",

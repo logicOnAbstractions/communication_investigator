@@ -27,6 +27,7 @@ from utilities.logger import get_root_logger
 from utilities.dao import *
 from program.validation import TokenManager
 from flask import Flask
+from program.decorators import api_calls_wrapper
 
 app         = Flask(__name__)
 
@@ -71,7 +72,7 @@ class MainProgram:
         tokens = self.get_tokens_response_from_code(code)
         print(tokens)
 
-
+    @api_calls_wrapper
     def ping_strava(self):
         """ pings stravaé. Returns the who object from requests.get() """
         self.LOG.info(f"Pinging strava.... Expecting 200 OK reply.")
@@ -104,6 +105,7 @@ class MainProgram:
         else:                   # TODO: implt. relevent actions if we fail to launc the oauth
             return False
 
+    @api_calls_wrapper
     def get_tokens_response_from_code(self, code):
         """ gets you the acess/refresh tokens from strava. returns the dictionnary that contains the strava response (expiration, tokens, etc.) """
         # now we need to do a POST with the above code in params in order to receive our tokens
@@ -120,6 +122,7 @@ class MainProgram:
         else:
             return False
 
+    @api_calls_wrapper
     def get_activity_by_id(self, activity_id):
         """ assuming valid access/refresh token are set for this user in configs.json (or db or whereever),
             then fetches that activity id for that user if it exists
@@ -128,14 +131,31 @@ class MainProgram:
         if self.tok_man.validate_credentials():
             # activity_params = {"client_id": 47498, "client_secret": self.client_secret, "refresh_token": self.refresh_token,
             #                 "grant_type": "authorization_code"}
-            authorized_headers = {"Authorization": f" Bearer {self.access_token}"}
+            authorized_headers = {"Authorization": f"Bearer {self.access_token}"}
+            authorized_headers = {"Authorization": f"Bearer {self.access_token}"}
+            params              = {"include_all_efforts":"true"}
+            params              = {"include_all_efforts":True}
             # authorized_headers = {}
             getactivity_url = urljoin(self.sdao.get_activity_url, str(activity_id))
-            self.LOG.info(f"Url for token request from url: {getactivity_url}, with headers {authorized_headers}")
+            self.LOG.info(f"Url for token request from url: {getactivity_url}, with headers {authorized_headers}, params: {params}")
             # response = requests.get(getactivity_url, headers=authorized_headers)
-            response = requests.get(getactivity_url)
+            response = requests.get(getactivity_url, headers=authorized_headers, params=params)
+            # response = requests.get(getactivity_url + "?include_all_efforts=true", headers=authorized_headers)
             print(response.content)
-            # print(json.loads(response.content))
+            return response
+        else:
+            return False
+
+    @api_calls_wrapper
+    def get_athlete_info(self):
+        if self.tok_man.validate_credentials():
+            authorized_headers = {"Authorization": f"Bearer {self.access_token}"}
+            get_athlete_url = self.sdao.get_athlete_url
+            self.LOG.info(f"Url for token request from url: {get_athlete_url}, with headers {authorized_headers}")
+            # response = requests.get(getactivity_url, headers=authorized_headers)
+            response = requests.get(get_athlete_url, headers=authorized_headers)
+            print(response.content)
+            return response
 
         else:
             return False

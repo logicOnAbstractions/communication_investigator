@@ -73,6 +73,11 @@ class StravaDao(Dao):
     @property
     def get_activity_url(self):
         _ = self.routes
-        return urljoin(_["ROOT_URL"], _["ACTIVITIES"])
+        return urljoin(_["ROOT_API_URL"], _["ACTIVITIES"])
+
+    @property
+    def get_athlete_url(self):
+        _ = self.routes
+        return urljoin(_["ROOT_API_URL"], _["ATHLETES"])
 
 
