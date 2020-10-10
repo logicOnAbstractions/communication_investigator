@@ -30,18 +30,23 @@ class DiskDao(Dao):
             urls = json.load(file)
         return urls
 
-    def update_access_token(self, token):
+    def update_access_token(self, token, scope=""):
         """ takes in a token object as sent by strava in response after auth (or on resfresh token) & updates the user data accordingly."""
 
         # get configs from source. this is a dict. so we can just update its token key with what we received
         configs = self.get_configs()
-        configs["credentials"]["token"] = token
-
+        configs[CREDS]["token"] = token
+        configs[CREDS]["scope"] = scope
+        self.LOG.info(f"serializing tokens: {configs}")
         # update the token:{} dictionary with what we received, we write tot he file in this case
         with open(os.path.join(USERDATA_DIR, CONFIGS_FILE), 'w') as file:
             json.dump(configs, file, sort_keys=True, indent=4)
         # save updates/commit or whatever
         self.LOG.info(f"Update user token values. New tokens: {token}")
+
+    @property
+    def scope(self):
+        return self.get_configs()[CREDS]["scope"]
 
 class StravaDao(Dao):
     def __init__(self):
@@ -76,8 +81,21 @@ class StravaDao(Dao):
         return urljoin(_["ROOT_API_URL"], _["ACTIVITIES"])
 
     @property
+    def get_segment_efforts_url(self):
+        _ = self.routes
+        return urljoin(_["ROOT_API_URL"], _["SEGMENTS"])
+
+    @property
     def get_athlete_url(self):
         _ = self.routes
-        return urljoin(_["ROOT_API_URL"], _["ATHLETES"])
+        return urljoin(_["ROOT_API_URL"], _["ATHLETE"])
 
+    @property
+    def get_zones_url(self):
+        _ = self.routes
+        return urljoin(urljoin(_["ROOT_API_URL"], _["ATHLETE"]), _["ZONES"])
 
+    @property
+    def get_deauthorize_url(self):
+        _ = self.routes
+        return urljoin(_["ROOT_API_URL"], _["DEAUTHORIZE"])

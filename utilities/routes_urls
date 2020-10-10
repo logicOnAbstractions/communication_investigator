@@ -3,10 +3,12 @@
   "ROOT_URL" : "https://www.strava.com/",
   "ROOT_API_URL" : "https://www.strava.com/api/v3/",
   "ACTIVITIES": "activities/",
-  "ATHLETES": "athlete/",
+  "ATHLETE": "athlete/",
+  "ZONES": "zones",
   "ROUTES": "routes/",
   "OAUTH_CODE": "oauth/",
   "AUTHORIZE": "authorize/",
+  "DEAUTHORIZE": "deauthorize/",
   "TOKEN": "token"
 
 

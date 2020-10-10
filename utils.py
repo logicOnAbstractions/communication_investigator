@@ -13,3 +13,4 @@ DUMMY_TOKEN         = "dummy_token"
 
 # others
 BASE_LOGGER_NAME    = "mylogger"
+CREDS               = "credentials"
